@@ -2,6 +2,7 @@
 
 ## [Download](https://github.com/Gjergj/proxy_gui/releases)
 
+![Run on MacOS](assets/macos_run.gif)
 
 ![](assets/0616.gif)
 
