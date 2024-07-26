@@ -40,6 +40,14 @@ services:
     volumes:
       - ghost_path:/var/lib/ghost/content
 
+  api:
+    container_name: my_api
+    ports:
+      - 8083:8080
+    build:
+      context: .
+      dockerfile: ./Dockerfile-sampleapi
+
   db:
     image: mysql:8.0
     restart: always
