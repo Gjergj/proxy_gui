@@ -1,0 +1,72 @@
+version: '3.1'
+
+services:
+
+  ghost_subdomain:
+    image: ghost:5-alpine
+    restart: always
+    ports:
+      - 8081:2368
+    environment:
+      # see https://ghost.org/docs/config/#configuration-options
+      database__client: mysql
+      database__connection__host: db
+      database__connection__user: root
+      database__connection__password: example
+      database__connection__database: ghost
+      # this url value is just an example, and is likely wrong for your environment!
+      url: https://sub.localhost
+      # contrary to the default mentioned in the linked documentation, this image defaults to NODE_ENV=production (so development mode needs to be explicitly specified if desired)
+      #NODE_ENV: development
+    volumes:
+      - ghost_subdomain:/var/lib/ghost/content
+
+  ghost_path:
+    image: ghost:5-alpine
+    restart: always
+    ports:
+      - 8082:2368
+    environment:
+      # see https://ghost.org/docs/config/#configuration-options
+      database__client: mysql
+      database__connection__host: db
+      database__connection__user: root
+      database__connection__password: example
+      database__connection__database: ghost
+      # this url value is just an example, and is likely wrong for your environment!
+      url: https://subwithpath.localhost/blog
+      # contrary to the default mentioned in the linked documentation, this image defaults to NODE_ENV=production (so development mode needs to be explicitly specified if desired)
+      #NODE_ENV: development
+    volumes:
+      - ghost_path:/var/lib/ghost/content
+
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: example
+    volumes:
+      - db:/var/lib/mysql
+
+  caddy:
+    image: caddy:2.7.6
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+      - "2019:2019"
+    volumes:
+      - $PWD/testing/Caddyfile:/etc/caddy/Caddyfile
+      - $PWD/testing/site:/srv
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  ghost_subdomain:
+  ghost_path:
+  db:
+  caddy_data:
+  caddy_config:
