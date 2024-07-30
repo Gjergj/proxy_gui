@@ -1,4 +1,9 @@
-version: '3.1'
+version: '3.4'
+
+x-astutodb-env: &astutodb-env
+  environment:
+    - POSTGRES_USER: yourpostgresusername
+    - POSTGRES_PASSWORD: yourpostgrespassword
 
 services:
 
@@ -10,7 +15,7 @@ services:
     environment:
       # see https://ghost.org/docs/config/#configuration-options
       database__client: mysql
-      database__connection__host: db
+      database__connection__host: ghost_db
       database__connection__user: root
       database__connection__password: example
       database__connection__database: ghost
@@ -29,7 +34,7 @@ services:
     environment:
       # see https://ghost.org/docs/config/#configuration-options
       database__client: mysql
-      database__connection__host: db
+      database__connection__host: ghost_db
       database__connection__user: root
       database__connection__password: example
       database__connection__database: ghost
@@ -40,21 +45,49 @@ services:
     volumes:
       - ghost_path:/var/lib/ghost/content
 
-  api:
-    container_name: my_api
+  api1:
     ports:
       - 8083:8080
+    environment:
+      - INSTANCE_NAME=api1
+    build:
+      context: .
+      dockerfile: ./Dockerfile-sampleapi
+
+  api2:
+    ports:
+      - 8085:8080
+    environment:
+      - INSTANCE_NAME=api2
     build:
       context: .
       dockerfile: ./Dockerfile-sampleapi
 
   db:
+    image: postgres:14.5
+    environment: &db-env
+      POSTGRES_USER: yourpostgresusername
+      POSTGRES_PASSWORD: yourpostgrespassword
+    volumes:
+      - astuto_dbdata:/var/lib/postgresql/data
+  astuto:
+    image: riggraz/astuto:latest
+    environment:
+      <<: *db-env
+      BASE_URL: https://astuto.localhost
+      SECRET_KEY_BASE: yoursecretkeybase
+    ports:
+      - "8084:3000"
+    depends_on:
+      - db
+
+  ghost_db:
     image: mysql:8.0
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: example
     volumes:
-      - db:/var/lib/mysql
+      - ghost_db:/var/lib/mysql
 
   caddy:
     image: caddy:2.7.6
@@ -75,6 +108,8 @@ services:
 volumes:
   ghost_subdomain:
   ghost_path:
-  db:
+  ghost_db:
   caddy_data:
   caddy_config:
+  astuto_dbdata:
+
